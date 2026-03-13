@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QR Code 掃描與儲存工具</title>
+    <title>QR Code 掃描與儲存工具 (進階爬蟲版)</title>
     
-    <!-- 改用更穩定的 CDN 伺服器載入核心套件 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* 隱藏掃描器預設的紅色提示字等無用 UI */
         #reader__dashboard_section_csr span {
             color: red !important;
             display: none !important;
         }
-        /* 自訂滾動條，讓介面更好看 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -26,17 +23,15 @@
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center py-8 px-4">
 
     <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- 標題區塊 -->
         <div class="bg-indigo-600 p-6 text-white text-center">
             <h1 class="text-2xl font-bold flex items-center justify-center gap-2">
                 <i data-lucide="qr-code"></i>
-                QR Code 掃描器
+                進階 QR 掃描器
             </h1>
-            <p class="text-indigo-200 mt-2 text-sm">自動同步至 Google 試算表</p>
+            <p class="text-indigo-200 mt-2 text-sm">掃描、同步並自動抓取網頁內容</p>
         </div>
 
         <div class="p-6">
-            <!-- 掃描畫面區塊 -->
             <div class="mb-6 flex flex-col items-center">
                 <div id="reader" class="w-full max-w-sm rounded-lg overflow-hidden border-4 border-indigo-100 bg-gray-100 aspect-square flex items-center justify-center relative">
                     <div id="reader-placeholder" class="text-gray-400 flex flex-col items-center text-center p-4">
@@ -52,7 +47,6 @@
                     <button id="btn-stop" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-full font-medium transition-colors shadow-md active:scale-95 hidden">
                         <i data-lucide="square" class="w-4 h-4"></i> 停止掃描
                     </button>
-                    <!-- 新增：隱藏的檔案上傳輸入框與按鈕 -->
                     <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden">
                     <button id="btn-upload" class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium transition-colors shadow-md active:scale-95">
                         <i data-lucide="camera" class="w-4 h-4"></i> 拍照/上傳
@@ -62,7 +56,6 @@
 
             <hr class="border-gray-200 my-8">
 
-            <!-- 掃描結果列表區塊 -->
             <div>
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-700 flex items-center gap-2">
@@ -79,13 +72,11 @@
                     </div>
                 </div>
 
-                <!-- 空狀態提示 -->
                 <div id="empty-state" class="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
                     <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
                     <p>尚未掃描任何內容</p>
                 </div>
 
-                <!-- 列表容器 -->
                 <ul id="result-list" class="space-y-3 max-h-80 overflow-y-auto pr-1 hidden">
                     <!-- Javascript 動態產生內容 -->
                 </ul>
@@ -93,13 +84,11 @@
         </div>
     </div>
 
-    <!-- 浮動提示框 (Toast) -->
     <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-50 flex items-center gap-2">
         <i data-lucide="info" class="w-5 h-5 text-indigo-300"></i>
         <span id="toast-message">提示訊息</span>
     </div>
 
-    <!-- 自訂對話框 (Modal) -->
     <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 transform scale-95 transition-transform duration-300" id="modal-content">
             <h3 class="text-xl font-bold mb-2 text-gray-800" id="modal-title">提示</h3>
@@ -112,16 +101,11 @@
     </div>
 
     <script>
-        // 確保網頁元素都載入後才執行程式
         document.addEventListener('DOMContentLoaded', () => {
-            try {
-                // 初始化圖示
-                lucide.createIcons();
-            } catch (e) {
-                console.warn("圖示載入失敗", e);
-            }
+            try { lucide.createIcons(); } catch (e) { console.warn("圖示載入失敗", e); }
 
             // === 你的 Google Apps Script 專屬 API 網址 ===
+            // ⚠️ 請確保這是你最新的部署網址
             const gasUrl = "https://script.google.com/macros/s/AKfycbxk8BxOgRMbIc4sUPamPTn2l9b1cUmoC_mxjqADpTOcmjpi4QPncFmWBwEzdO58s5I/exec";
             
             let html5QrCode = null;
@@ -132,8 +116,8 @@
             const readerPlaceholder = document.getElementById('reader-placeholder');
             const btnStart = document.getElementById('btn-start');
             const btnStop = document.getElementById('btn-stop');
-            const btnUpload = document.getElementById('btn-upload'); // 新增
-            const fileInput = document.getElementById('file-input'); // 新增
+            const btnUpload = document.getElementById('btn-upload');
+            const fileInput = document.getElementById('file-input');
             const resultList = document.getElementById('result-list');
             const emptyState = document.getElementById('empty-state');
             const itemCount = document.getElementById('item-count');
@@ -203,12 +187,8 @@
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
-                try {
-                    document.execCommand('copy');
-                    showToast('已複製到剪貼簿！');
-                } catch (err) {
-                    showToast('複製失敗，請手動複製。');
-                }
+                try { document.execCommand('copy'); showToast('已複製到剪貼簿！'); } 
+                catch (err) { showToast('複製失敗，請手動複製。'); }
                 textArea.remove();
             }
 
@@ -224,7 +204,6 @@
                 resultList.classList.remove('hidden');
                 resultList.innerHTML = '';
 
-                // 使用 slice() 複製陣列再反轉，提高舊版瀏覽器相容性
                 scannedItems.slice().reverse().forEach((item, reverseIndex) => {
                     const index = scannedItems.length - 1 - reverseIndex;
                     const isUrl = item.text.startsWith('http://') || item.text.startsWith('https://');
@@ -236,9 +215,17 @@
                     contentDiv.className = 'flex-1 min-w-0 w-full';
                     
                     const textEl = document.createElement('p');
-                    textEl.className = 'text-gray-800 break-all font-medium';
+                    textEl.className = 'text-gray-800 break-all font-medium mb-1';
                     textEl.textContent = item.text;
                     contentDiv.appendChild(textEl);
+
+                    // --- 新增：顯示抓取到的網頁內容 ---
+                    if (item.extractedData) {
+                        const extractedEl = document.createElement('div');
+                        extractedEl.className = 'mt-2 p-2 bg-gray-50 border border-gray-100 rounded text-sm text-gray-600 break-all';
+                        extractedEl.innerHTML = `<span class="font-semibold text-indigo-600">抓取結果：</span> ${item.extractedData}`;
+                        contentDiv.appendChild(extractedEl);
+                    }
 
                     const badgesDiv = document.createElement('div');
                     badgesDiv.className = 'flex flex-wrap gap-2 mt-2 items-center';
@@ -260,13 +247,13 @@
                     if (item.syncStatus === 'syncing') {
                         const syncLabel = document.createElement('span');
                         syncLabel.className = 'inline-block text-[10px] font-bold tracking-wider text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded flex items-center gap-1';
-                        syncLabel.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> 同步中';
+                        syncLabel.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> 同步中與抓取中';
                         badgesDiv.appendChild(syncLabel);
                     } else if (item.syncStatus === 'failed') {
                         const syncLabel = document.createElement('span');
                         syncLabel.className = 'inline-block text-[10px] font-bold tracking-wider text-red-600 bg-red-100 px-2 py-0.5 rounded cursor-pointer hover:bg-red-200 flex items-center gap-1 transition-colors';
                         syncLabel.title = '點擊重試';
-                        syncLabel.innerHTML = '<i data-lucide="rotate-cw" class="w-3 h-3"></i> 重試同步';
+                        syncLabel.innerHTML = '<i data-lucide="rotate-cw" class="w-3 h-3"></i> 重試';
                         syncLabel.onclick = () => {
                             item.syncStatus = 'syncing';
                             renderList();
@@ -283,7 +270,7 @@
                     const copyBtn = document.createElement('button');
                     copyBtn.className = 'p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors';
                     copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
-                    copyBtn.onclick = () => copyText(item.text);
+                    copyBtn.onclick = () => copyText(item.extractedData ? `${item.text}\n抓取結果：${item.extractedData}` : item.text);
                     actionsDiv.appendChild(copyBtn);
 
                     if (isUrl) {
@@ -324,7 +311,8 @@
                     if (result.status === 'success') {
                         item.syncStatus = 'success';
                         item.serial = result.serial;
-                        showToast(`已同步並取得序號: ${result.serial}`);
+                        item.extractedData = result.extracted; // 接收爬蟲抓到的資料
+                        showToast(`已同步並完成抓取`);
                     } else {
                         item.syncStatus = 'failed';
                         showToast(`同步失敗: ${result.message || '未知錯誤'}`);
@@ -338,7 +326,8 @@
 
             function handleScanSuccess(decodedText) {
                 if (isScanning && !scannedItems.some(item => item.text === decodedText)) {
-                    const newItem = { text: decodedText, serial: null, syncStatus: 'syncing' };
+                    // 新增 extractedData 屬性
+                    const newItem = { text: decodedText, serial: null, syncStatus: 'syncing', extractedData: null };
                     scannedItems.push(newItem);
                     renderList();
                     
@@ -408,38 +397,23 @@
                 }
             }
 
-            // --- 新增：處理靜態照片/相機拍照邏輯 ---
-            btnUpload.addEventListener('click', () => {
-                fileInput.click();
-            });
+            btnUpload.addEventListener('click', () => { fileInput.click(); });
 
             fileInput.addEventListener('change', async (e) => {
                 if (e.target.files.length === 0) return;
-                
-                // 如果正在錄影掃描，先關閉它
-                if (isScanning) {
-                    await stopCamera();
-                }
+                if (isScanning) await stopCamera();
 
                 const file = e.target.files[0];
-                if (!html5QrCode) {
-                    html5QrCode = new Html5Qrcode("reader");
-                }
+                if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
                 try {
-                    // 掃描選擇的圖片
                     const decodedText = await html5QrCode.scanFile(file, true);
-                    
-                    // 暫時將 isScanning 設為 true 讓 handleScanSuccess 可以通行
                     isScanning = true; 
                     handleScanSuccess(decodedText);
                     isScanning = false;
-                    
                 } catch (err) {
                     showModal('辨識失敗', '圖片中找不到清晰的 QR Code，請換一張或重新拍攝。');
                 }
-                
-                // 清空 input 讓下次選同一張圖也能觸發
                 fileInput.value = '';
             });
 
@@ -461,9 +435,14 @@
                     return;
                 }
                 
+                // 匯出包含序號和抓取資料的內容
                 const textContent = scannedItems.map(item => {
-                    return item.serial ? `[${item.serial}] ${item.text}` : item.text;
-                }).join('\n');
+                    let text = item.serial ? `[${item.serial}] ${item.text}` : item.text;
+                    if (item.extractedData) {
+                        text += `\n-> 抓取結果：${item.extractedData}`;
+                    }
+                    return text;
+                }).join('\n\n');
                 
                 const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
